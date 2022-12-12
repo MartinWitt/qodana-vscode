@@ -15,10 +15,8 @@ function createLogChannel() {
 	return vscode.window.createOutputChannel('Qodana-VSCode');
 }
 
-export function runQodana() {
-	runQodanaInternal();
-}
-async function runQodanaInternal() {
+
+async function runQodana() {
 	const channel = createLogChannel();
 	const sarifExt = extensions.getExtension('MS-SarifVSCode.sarif-viewer');
 	if (!sarifExt) {
