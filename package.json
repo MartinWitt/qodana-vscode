@@ -4,7 +4,7 @@
 	"description": "A qodana-scan wrapper for VS Code",
 	"version": "0.0.1",
 	"publisher": "MartinWitt",
-	"repository": "",
+	"repository": "https://github.com/MartinWitt/qodana-vscode",
 	"engines": {
 		"vscode": "^1.74.0"
 	},
