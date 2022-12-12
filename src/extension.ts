@@ -8,6 +8,7 @@ import * as shell from 'shelljs';
 export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.runQodana', runQodana));
 	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.openQodanaReport', openQodanaReport));
+	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.deleteCache', deleteCache));
 	const channel = createLogChannel();
 	channel.appendLine('Qodana extension is activated');
 }
@@ -107,4 +108,17 @@ function openQodanaReport() {
 		openSarifFile(sarifExt, cleanedPath);
 	}
 }
-
+function deleteCache() {
+	const channel = createLogChannel();
+	if (!vscode.workspace.workspaceFolders) {
+		vscode.window.showErrorMessage('No workspace folder is opened');
+		channel.appendLine('No workspace folder is opened');
+		return;
+	}
+	const path = vscode.workspace.workspaceFolders[0].uri.fsPath;
+	const cleanedPath = path.replace(/\\/g, '/');
+	const cachePath = cleanedPath + "/.vscode/qodana/cache";
+	const resultPath = cleanedPath + "/.vscode/qodana/results";
+	fs.rmdirSync(cachePath, { recursive: true });
+	fs.rmdirSync(resultPath, { recursive: true });
+}
