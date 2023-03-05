@@ -2,7 +2,7 @@
 	"name": "qodana-vscode",
 	"displayName": "qodana-vscode",
 	"description": "A qodana-scan wrapper for VS Code",
-	"version": "0.0.2",
+	"version": "0.0.3",
 	"publisher": "MartinWitt",
 	"repository": "https://github.com/MartinWitt/qodana-vscode",
 	"engines": {
@@ -26,6 +26,10 @@
 			{
 				"command": "qodana-vscode.deleteCache",
 				"title": "Delete qodana cache"
+			},
+			{
+				"command": "qodana-vscode.pullImage",
+				"title": "Update the qodana image"
 			}
 		],
 		"configuration": {
@@ -41,14 +45,24 @@
 					"default": "/.vscode/qodana/report",
 					"description": "The path to the report folder"
 				},
-				"qodana-vscode.qodana-image": {
+				"qodana-vscode.linter.java": {
 					"type": "string",
-					"default": "jetbrains/qodana:latest",
-					"description": "The qodana image to use"
+					"default": " jetbrains/qodana:latest",
+					"description": "The qodana image to use for java"
+				},
+					"qodana-vscode.linter.java-community": {
+						"type": "string",
+						"default": " jetbrains/qodana-jvm-community:latest",
+						"description": "The qodana image to use for java-community"
+					},
+					"qodana-vscode.linter.js": {
+						"type": "string",
+						"default": "jetbrains/qodana-js:latest",
+						"description": "The qodana image to use for js"
+					}
 				}
 			}
-		}
-	},
+		},
 	"scripts": {
 		"vscode:prepublish": "npm run esbuild-base -- --minify",
 		"esbuild-base": "esbuild ./src/extension.ts --bundle --outfile=out/main.js --external:vscode --format=cjs --platform=node",

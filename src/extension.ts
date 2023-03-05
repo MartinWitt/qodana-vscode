@@ -9,8 +9,10 @@ export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.runQodana', runQodana));
 	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.openQodanaReport', openQodanaReport));
 	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.deleteCache', deleteCache));
+	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.pullImage', pullContainer));
 	channel.appendLine('Qodana extension is activated');
 }
+
 function createLogChannel() {
 	return vscode.window.createOutputChannel('Qodana-VSCode');
 }
@@ -57,9 +59,38 @@ async function runQodana() {
 	invokeQodana(volumePath, cacheVolume, resultsVolume, channel, sarifExt, cleanedPath);
 
 }
+function pullContainer() {
+	let qodanaImage;
+	vscode.window.showQuickPick(createQodanaVersionQuickPickItems(), { canPickMany: false }).then((value) => {
+		qodanaImage = value!.label;
+	});
+	if (!qodanaImage) {
+		return;
+	}
+	const pull = spawn('docker', ['pull', qodanaImage]);
+	pull.stdout.on('data', (data: any) => {
+		channel.appendLine(`stdout: ${data}`);
+	}
+	);
+	pull.stderr.on('data', (data: any) => {
+		channel.appendLine(`stderr: ${data}`);
+	}
+	);
+	pull.on('close', (code: any) => {
+		channel.appendLine(`child process exited with code ${code}`);
+	}
+	);
+}
 
 function invokeQodana(volumePath: string, cacheVolume: string, resultsVolume: string, channel: vscode.OutputChannel, sarifExt: vscode.Extension<any>, cleanedPath: string) {
-	const qodanaResults = spawn('docker', ['run', "-v", volumePath, "-v", cacheVolume, "-v", resultsVolume, vscode.workspace.getConfiguration('qodana-vscode').get('qodana-image') as string]);
+	let qodanaImage;
+	vscode.window.showQuickPick(createQodanaVersionQuickPickItems(), { canPickMany: false }).then((value) => {
+		qodanaImage = value!.label;
+	});
+	if (!qodanaImage) {
+		return;
+	}
+	const qodanaResults = spawn('docker', ['run', "-v", volumePath, "-v", cacheVolume, "-v", resultsVolume, qodanaImage]);
 	qodanaResults.stdout.on('data', (data: any) => {
 		channel.appendLine(`stdout: ${data}`);
 	});
@@ -145,4 +176,14 @@ function checkIfDockerIsRunning() {
 		}
 	}
 	);
+}
+function createQodanaVersionQuickPickItems() {
+	const items: QodanaSelection[] = [];
+	items.push(new QodanaSelection('java-community', vscode.workspace.getConfiguration('qodana-vscode').get('linter.java-community') as string));
+	items.push(new QodanaSelection('java', vscode.workspace.getConfiguration('qodana-vscode').get('linter.java') as string));
+	items.push(new QodanaSelection('js', vscode.workspace.getConfiguration('qodana-vscode').get('linter.js') as string));
+	return items;
+}
+class QodanaSelection implements vscode.QuickPickItem {
+	constructor(public label: string, public description: string) { }
 }
