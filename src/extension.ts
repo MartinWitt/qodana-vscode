@@ -37,21 +37,31 @@ async function runQodana() {
 		return;
 	}
 	const path = vscode.workspace.workspaceFolders[0].uri.fsPath;
-	// TODO: check if docker is installed
+	// q: check if docker is running by invoking docker ps
+	checkIfDockerIsRunning();
+	// if not running, show error message and return
+	// check if qodana image is installed
+	// if not installed, show error message and return
+	// check if qodana image is up to date
+	// if not up to date, show error message and return
+
 	// windows loves path with \ instead of / so we need to replace them to make docker happy
 	const cleanedPath = path.replace(/\\/g, '/');
-	const cachePath = cleanedPath + "/.vscode/qodana/cache";
+	const cachePath = cleanedPath + vscode.workspace.getConfiguration('qodana-vscode').get('cache-path');
 	createFolderIfMissing(cachePath);
 	const resultPath = cleanedPath + "/.vscode/qodana/results";
 	createFolderIfMissing(resultPath);
 
 	// convert the path to volumes
-	const volumePath = cleanedPath + "/:/data/project/";
-	const cacheVolume = cachePath + "/:/data/cache/";
-	const resultsVolume = resultPath + "/:/data/results/";
+	const { volumePath, cacheVolume, resultsVolume } = createVolumePaths(cleanedPath, cachePath, resultPath);
 
 	// run qodana and pipe the output to the console
-	const qodanaResults = spawn('docker', ['run', "-v", volumePath, "-v", cacheVolume, "-v", resultsVolume, "jetbrains/qodana-jvm-community"]);
+	invokeQodana(volumePath, cacheVolume, resultsVolume, channel, sarifExt, cleanedPath);
+
+}
+
+function invokeQodana(volumePath: string, cacheVolume: string, resultsVolume: string, channel: vscode.OutputChannel, sarifExt: vscode.Extension<any>, cleanedPath: string) {
+	const qodanaResults = spawn('docker', ['run', "-v", volumePath, "-v", cacheVolume, "-v", resultsVolume, vscode.workspace.getConfiguration('qodana-vscode').get('qodana-image') as string]);
 	qodanaResults.stdout.on('data', (data: any) => {
 		channel.appendLine(`stdout: ${data}`);
 	});
@@ -70,7 +80,13 @@ async function runQodana() {
 			openSarifFile(sarifExt, cleanedPath);
 		}
 	});
+}
 
+function createVolumePaths(cleanedPath: string, cachePath: string, resultPath: string) {
+	const volumePath = cleanedPath + "/:/data/project/";
+	const cacheVolume = cachePath + "/:/data/cache/";
+	const resultsVolume = resultPath + "/:/data/results/";
+	return { volumePath, cacheVolume, resultsVolume };
 }
 
 function openSarifFile(sarifExt: vscode.Extension<any>, cleanedPath: string) {
@@ -117,8 +133,18 @@ function deleteCache() {
 	}
 	const path = vscode.workspace.workspaceFolders[0].uri.fsPath;
 	const cleanedPath = path.replace(/\\/g, '/');
-	const cachePath = cleanedPath + "/.vscode/qodana/cache";
+	const cachePath = cleanedPath + vscode.workspace.getConfiguration('qodana-vscode').get('cache-path');
 	const resultPath = cleanedPath + "/.vscode/qodana/results";
 	fs.rmdirSync(cachePath, { recursive: true });
 	fs.rmdirSync(resultPath, { recursive: true });
+}
+
+// check if docker is running
+function checkIfDockerIsRunning() {
+	shell.exec('docker ps', { silent: true }, (code: any, stdout: any, stderr: any) => {
+		if (code !== 0) {
+			vscode.window.showErrorMessage('Docker is not running');
+		}
+	}
+	);
 }

@@ -23,7 +23,27 @@
 				"command": "qodana-vscode.openQodanaReport",
 				"title": "Open qodana report"
 			}
-		]
+		],
+				"configuration": {
+					"title": "Qodana-VSCode",
+					"properties": {
+						"qodana-vscode.cache-path": {
+							"type": "string",
+							"default": "/.vscode/qodana/cache",
+							"description": "The path to the cache folder"
+						},
+						"qodana-vscode.report-path": {
+							"type": "string",
+							"default": "/.vscode/qodana/report",
+							"description": "The path to the report folder"
+						},
+						"qodana-vscode.qodana-image": {
+							"type": "string",
+							"default": "jetbrains/qodana:latest",
+							"description": "The qodana image to use"
+						}
+					}
+				}
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run esbuild-base -- --minify",
