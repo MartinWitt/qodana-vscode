@@ -22,6 +22,10 @@
 			{
 				"command": "qodana-vscode.openQodanaReport",
 				"title": "Open qodana report"
+			},
+			{
+				"command": "qodana-vscode.deleteCache",
+				"title": "Delete qodana cache"
 			}
 		],
 				"configuration": {
