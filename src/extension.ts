@@ -4,12 +4,11 @@ import { spawn } from 'child_process';
 import * as fs from 'fs';
 import * as shell from 'shelljs';
 
-
+const channel = createLogChannel();
 export function activate(context: vscode.ExtensionContext) {
 	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.runQodana', runQodana));
 	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.openQodanaReport', openQodanaReport));
 	context.subscriptions.push(vscode.commands.registerCommand('qodana-vscode.deleteCache', deleteCache));
-	const channel = createLogChannel();
 	channel.appendLine('Qodana extension is activated');
 }
 function createLogChannel() {
@@ -18,7 +17,6 @@ function createLogChannel() {
 
 
 async function runQodana() {
-	const channel = createLogChannel();
 	const sarifExt = extensions.getExtension('MS-SarifVSCode.sarif-viewer');
 	if (!sarifExt) {
 		vscode.window.showErrorMessage('Sarif extension is missing');
@@ -141,7 +139,7 @@ function deleteCache() {
 
 // check if docker is running
 function checkIfDockerIsRunning() {
-	shell.exec('docker ps', { silent: true }, (code: any, stdout: any, stderr: any) => {
+	shell.exec('docker ps', { silent: true }, (code: any) => {
 		if (code !== 0) {
 			vscode.window.showErrorMessage('Docker is not running');
 		}
